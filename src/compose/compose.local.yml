@@ -35,12 +35,13 @@ services:
       - TASKS=0
       - VERSION=1
       - VOLUMES=0
-    privileged: true
     read_only: true
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
     tmpfs:
       - /run
+    security_opt:
+      - no-new-privileges:true
     networks:
       - net-internal
 
