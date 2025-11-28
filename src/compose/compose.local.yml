@@ -45,6 +45,8 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock:ro
     tmpfs:
       - /run
+    security_opt:
+      - no-new-privileges:true
     networks:
       - internal
 

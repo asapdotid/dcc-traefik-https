@@ -1,5 +1,5 @@
 ARG ALPINE_VERSION=3.21
-FROM alpine:${ALPINE_VERSION} AS base
+FROM docker.io/library/alpine:${ALPINE_VERSION} AS base
 
 RUN apk add --no-cache --upgrade \
     apk-cron \
