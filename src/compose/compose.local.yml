@@ -4,8 +4,8 @@ networks:
     name: proxy
     driver: bridge
     external: true
-  net-internal:
-    name: net-internal
+  internal:
+    name: internal
 
 services:
   dockersocket:
@@ -25,28 +25,28 @@ services:
       - EXEC=0
       - IMAGES=0
       - INFO=1
+      - LOG_LEVEL=info
       - NETWORKS=1
       - NODES=1
       - PING=1
       - PLUGINS=0
       - POST=0
-      - PROXY_READ_TIMEOUT=240
       - SECRETS=0
       - SERVICES=0
       - SESSION=0
       - SWARM=0
       - SYSTEM=0
       - TASKS=0
+      - TZ=${TIMEZONE}
       - VERSION=1
       - VOLUMES=0
-    privileged: true
     read_only: true
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
     tmpfs:
       - /run
     networks:
-      - net-internal
+      - internal
 
   traefik:
     restart: unless-stopped
@@ -67,7 +67,7 @@ services:
         protocol: tcp
         mode: host
     networks:
-      - net-internal
+      - internal
       - proxy
     depends_on:
       - dockersocket
@@ -79,7 +79,7 @@ services:
     volumes:
       - ${CURDIR}/.logs/traefik:/var/log/traefik
     networks:
-      - net-internal
+      - internal
     depends_on:
       - traefik
 
@@ -87,7 +87,7 @@ services:
   #   image: traefik/whoami:latest
   #   container_name: whoami
   #   networks:
-  #     - net-internal
+  #     - internal
   #     - proxy
   #   depends_on:
   #     - traefik
@@ -104,7 +104,7 @@ services:
   #   security_opt:
   #     - no-new-privileges:true
   #   networks:
-  #     - net-internal
+  #     - internal
   #     - proxy
   #   volumes:
   #     - /etc/localtime:/etc/localtime:ro
