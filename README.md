@@ -10,13 +10,15 @@ This guide shows you how to deploy your containers behind Traefik reverse-proxy.
 
 ### Main container
 
--   Docker Socket Proxy 1.26.2/latest
--   Traefik 2.11.x, 3.1.x, 3.2.x & 3.3.x
+-   Docker Socket Proxy 1.10.1
+-   Traefik 2.11.x, 3.1.x, 3.2.x, 3.3.x, 3.4.x & 3.5.x
 -   Logger Alpine Linux 3.20 or 3.21
+
+> **Traefik** `3.6.x` on going testing config with **Docker** version `28.x.x`
 
 ### Docker container:
 
--   Docker Socket Proxy (security) - `Linuxserver.io` [Document](https://hub.docker.com/r/linuxserver/socket-proxy)
+-   Docker Socket Proxy (security) - [Document](https://hub.docker.com/r/wollomatic/socket-proxy)
 -   Traefik [Document](https://hub.docker.com/_/traefik)
 -   Logger (logrotate & cron) `Custom of Alpine`
 -   Portainer (Optional) [Document](https://www.portainer.io/)
@@ -66,11 +68,11 @@ Modified file in `.make/.env` for build image
 # Project variables
 DOCKER_REGISTRY=docker.io
 DOCKER_NAMESPACE=asapdotid
-DOCKER_PROJECT_NAME=cf-proxy
+DOCKER_PROJECT_NAME=tf-proxy
 
 # Docker image version
-DOCKER_SOCKET_VERSION=latest
-TRAEFIK_VERSION=3.2
+DOCKER_SOCKET_VERSION=1.10.1
+TRAEFIK_VERSION=3.5
 ALPINE_VERSION=3.21
 
 # Timezone for os and log level
@@ -140,10 +142,10 @@ You can paste the username into the `TRAEFIK_BASIC_AUTH_USERNAME` environment va
 
 ### Step 5: Launch Your Deployment
 
-Optional create docker network `net-proxy` for external used with other docker containers:
+Optional create docker network `proxy` for external used with other docker containers:
 
 ```bash
-docker network create net-proxy
+docker network create proxy
 ```
 
 ```bash
@@ -208,7 +210,7 @@ Example labels redirect www to npn www:
 ```yaml
 labels:
     - traefik.enable=true
-    - traefil.docker.network=net-proxy
+    - traefil.docker.network=proxy
     - traefik.http.routers.whoami.entrypoints=https
     - traefik.http.routers.whoami.rule=Host(`jogjascript.com`)||Host(`www.jogjascript.com`)
     # Add redirect middlewares for http and https
@@ -226,7 +228,7 @@ whoami:
     image: traefik/whoami:latest
     container_name: whoami
     networks:
-        - net-internal
+        - internal
     depends_on:
         - traefik
     labels:
@@ -246,7 +248,7 @@ portainer:
     security_opt:
         - no-new-privileges:true
     networks:
-        - net-internal
+        - internal
     volumes:
         - /etc/localtime:/etc/localtime:ro
         - ../../.data/portainer:/data
@@ -268,7 +270,7 @@ Sample:
 ---
 labels:
     - traefik.enable=true
-    - traefil.docker.network=net-proxy
+    - traefil.docker.network=proxy
     - traefik.http.routers.portainer.entrypoints=https
     - traefik.http.routers.portainer.rule=Host(`app.${TRAEFIK_DOMAIN_NAME}`)
 ```
@@ -279,7 +281,7 @@ Path prefix with loadbalancer:
 ---
 labels:
     - traefik.enable=true
-    - traefik.docker.network=net-proxy
+    - traefik.docker.network=proxy
     - traefik.http.routers.backend-v1.entrypoints=https
     - traefik.http.routers.backend-v1.rule=Host(`api.domain_name.com`) && PathPrefix(`/v1`)
     - traefik.http.services.backend-v1.loadbalancer.server.port=3000
@@ -294,10 +296,10 @@ Sample `nginx` service:
 nginx:
     image: nginx:stable
     networks:
-        - net-proxy
+        - proxy
     labels:
         - traefik.enable=true
-        - traefil.docker.network=net-proxy
+        - traefil.docker.network=proxy
         - traefik.http.routers.portainer.entrypoints=https
         - traefik.http.routers.portainer.rule=Host(`app.${TRAEFIK_DOMAIN_NAME}`)
 ```
@@ -309,10 +311,10 @@ Also included is an option that allows only TLS v1.3. This option must be manual
 nginx:
     image: nginx:stable
     networks:
-        - net-proxy
+        - proxy
     labels:
         - traefik.enable=true
-        - traefil.docker.network=net-proxy
+        - traefil.docker.network=proxy
         # only TLS v1.3
         - traefik.http.routers.project-app.tls.options=tlsv13only@file
         - traefik.http.routers.portainer.entrypoints=https

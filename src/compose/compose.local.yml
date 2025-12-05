@@ -1,57 +1,44 @@
 ---
 networks:
-  net-proxy:
-    name: net-proxy
+  proxy:
+    name: proxy
     driver: bridge
     external: true
-  net-internal:
-    name: net-internal
+  internal:
+    name: internal
+    internal: true
+    attachable: false
 
 services:
   dockersocket:
-    restart: unless-stopped
-    environment:
-      - ALLOW_START=0
-      - ALLOW_STOP=0
-      - ALLOW_RESTARTS=0
-      - AUTH=0
-      - BUILD=0
-      - COMMIT=0
-      - CONFIGS=0
-      - CONTAINERS=1
-      - DISABLE_IPV6=0
-      - DISTRIBUTION=0
-      - EVENTS=1
-      - EXEC=0
-      - IMAGES=0
-      - INFO=1
-      - NETWORKS=1
-      - NODES=1
-      - PING=1
-      - PLUGINS=0
-      - POST=0
-      - PROXY_READ_TIMEOUT=240
-      - SECRETS=0
-      - SERVICES=0
-      - SESSION=0
-      - SWARM=0
-      - SYSTEM=0
-      - TASKS=0
-      - VERSION=1
-      - VOLUMES=0
-    privileged: true
     read_only: true
+    restart: unless-stopped
+    user: 65530:960
+    mem_limit: 128M
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    command:
+      - "-loglevel=debug"
+      - "-listenip=0.0.0.0"
+      - "-allowfrom=traefik"
+      - '-allowGET=/v1\..{1,2}/(version|containers/.*|events.*)'
+      - "-allowHEAD=/_ping"
+      - "-shutdowngracetime=5"
+      - "-watchdoginterval=60"
+      - "-watchdoginterval=3600"
+      - "-stoponwatchdog"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
-    tmpfs:
-      - /run
     networks:
-      - net-internal
+      - internal
 
   traefik:
     restart: unless-stopped
     security_opt:
       - no-new-privileges:true
+    mem_limit: 2G
     volumes:
       - ${CURDIR}/.data/traefik/ssl/:/etc/traefik/ssl/
       - ${CURDIR}/.logs/traefik/:/var/log/traefik/
@@ -67,8 +54,8 @@ services:
         protocol: tcp
         mode: host
     networks:
-      - net-internal
-      - net-proxy
+      - internal
+      - proxy
     depends_on:
       - dockersocket
 
@@ -76,10 +63,11 @@ services:
     restart: unless-stopped
     security_opt:
       - no-new-privileges:true
+    mem_limit: 64M
     volumes:
       - ${CURDIR}/.logs/traefik:/var/log/traefik
     networks:
-      - net-internal
+      - internal
     depends_on:
       - traefik
 
@@ -87,8 +75,8 @@ services:
   #   image: traefik/whoami:latest
   #   container_name: whoami
   #   networks:
-  #     - net-internal
-  #     - net-proxy
+  #     - internal
+  #     - proxy
   #   depends_on:
   #     - traefik
   #   labels:
@@ -104,8 +92,8 @@ services:
   #   security_opt:
   #     - no-new-privileges:true
   #   networks:
-  #     - net-internal
-  #     - net-proxy
+  #     - internal
+  #     - proxy
   #   volumes:
   #     - /etc/localtime:/etc/localtime:ro
   #     - ${CURDIR}/.data/portainer:/data

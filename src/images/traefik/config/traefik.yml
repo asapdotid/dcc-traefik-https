@@ -6,7 +6,7 @@ serversTransport:
   insecureSkipVerify: true
 
 entryPoints:
-# Not used in apps, but redirect everything from HTTP to HTTPS
+  # Not used in apps, but redirect everything from HTTP to HTTPS
   http:
     address: :80
     forwardedHeaders:
@@ -79,7 +79,7 @@ providers:
   # Docker provider for connecting all apps that are inside of the docker network
   docker:
     endpoint: "tcp://dockersocket:2375"
-    network: net-internal
+    network: internal
     exposedByDefault: false
     # swarmModeRefreshSeconds: 15s
     watch: true
