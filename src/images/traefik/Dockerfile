@@ -1,6 +1,5 @@
 ARG TRAEFIK_VERSION=3.2
-FROM docker.io/mikefarah/yq:4 AS yq
-FROM docker.io/traefik:${TRAEFIK_VERSION} AS base
+FROM traefik:${TRAEFIK_VERSION} AS base
 
 # Timezone
 ARG TIMEZONE
@@ -108,7 +107,7 @@ RUN rm -rf /var/cache/apk/* && \
     rm -rf /tmp/*
 
 # Setup yq command
-COPY --from=yq "/usr/bin/yq" "/usr/local/bin/yq"
+COPY --from=mikefarah/yq:4 "/usr/bin/yq" "/usr/local/bin/yq"
 
 # Timezone
 RUN ln -snf /usr/share/zoneinfo/$TIMEZONE /etc/localtime && echo $TIMEZONE > /etc/timezone
