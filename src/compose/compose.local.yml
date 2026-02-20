@@ -13,7 +13,7 @@ services:
   dockersocket:
     read_only: true
     restart: unless-stopped
-    user: 65530:960
+    user: 65530:${DOCKER_GROUP_ID?}
     mem_limit: 128M
     cap_drop:
       - ALL

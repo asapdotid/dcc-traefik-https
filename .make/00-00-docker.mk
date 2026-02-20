@@ -32,6 +32,7 @@ DOCKER_COMPOSE_FILE_ENV:=$(DOCKER_COMPOSE_DIR)/compose.local.yml
 # we need a couple of environment variables for docker-compose so we define a make-variable that we can
 # then reference later in the Makefile without having to repeat all the environment variables
 DOCKER_COMPOSE_COMMAND:= \
+    DOCKER_GROUP_ID=$(DOCKER_GROUP_ID) \
     DOCKER_REGISTRY=$(DOCKER_REGISTRY) \
     DOCKER_NAMESPACE=$(DOCKER_NAMESPACE) \
     DOCKER_SOCKET_VERSION=$(DOCKER_SOCKET_VERSION) \
