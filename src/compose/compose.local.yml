@@ -4,10 +4,6 @@ networks:
     name: proxy
     driver: bridge
     external: true
-  comnet:
-    name: comnet
-    internal: true
-    attachable: false
 
 services:
   dockersocket:
@@ -32,7 +28,7 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
     networks:
-      - comnet
+      - proxy
 
   traefik:
     restart: unless-stopped
@@ -54,7 +50,6 @@ services:
         protocol: tcp
         mode: host
     networks:
-      - comnet
       - proxy
     depends_on:
       - dockersocket
@@ -67,7 +62,7 @@ services:
     volumes:
       - ${CURDIR}/.logs/traefik:/var/log/traefik
     networks:
-      - comnet
+      - proxy
     depends_on:
       - traefik
 
@@ -75,7 +70,6 @@ services:
   #   image: traefik/whoami:latest
   #   container_name: whoami
   #   networks:
-  #     - comnet
   #     - proxy
   #   depends_on:
   #     - traefik
@@ -92,7 +86,6 @@ services:
   #   security_opt:
   #     - no-new-privileges:true
   #   networks:
-  #     - comnet
   #     - proxy
   #   volumes:
   #     - /etc/localtime:/etc/localtime:ro
