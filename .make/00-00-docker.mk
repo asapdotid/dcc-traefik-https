@@ -25,13 +25,15 @@ DOCKER_SERVICE_NAME_LOGGER:=logger
 
 DOCKER_DIR:=$(CURDIR)/src
 DOCKER_ENV_FILE:=$(DOCKER_DIR)/.env
-DOCKER_COMPOSE_DIR:=$(DOCKER_DIR)/compose
+DOCKER_COMPOSE_DIR:=$(DOCKER_DIR)/compose/$(CONTAINER_ENGINE)
 DOCKER_COMPOSE_FILE:=$(DOCKER_COMPOSE_DIR)/compose.yml
 DOCKER_COMPOSE_FILE_ENV:=$(DOCKER_COMPOSE_DIR)/compose.local.yml
 
 # we need a couple of environment variables for docker-compose so we define a make-variable that we can
 # then reference later in the Makefile without having to repeat all the environment variables
 DOCKER_COMPOSE_COMMAND:= \
+    CONTAINER_ENGINE=$(CONTAINER_ENGINE) \
+    DOCKER_GROUP_ID=$(DOCKER_GROUP_ID) \
     DOCKER_REGISTRY=$(DOCKER_REGISTRY) \
     DOCKER_NAMESPACE=$(DOCKER_NAMESPACE) \
     DOCKER_SOCKET_VERSION=$(DOCKER_SOCKET_VERSION) \

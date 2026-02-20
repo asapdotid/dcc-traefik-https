@@ -4,46 +4,20 @@ networks:
     name: proxy
     driver: bridge
     external: true
-  comnet:
-    name: comnet
-    internal: true
-    attachable: false
 
 services:
-  dockersocket:
-    read_only: true
-    restart: unless-stopped
-    user: 65530:960
-    mem_limit: 128M
-    cap_drop:
-      - ALL
-    security_opt:
-      - no-new-privileges:true
-    command:
-      - "-loglevel=debug"
-      - "-listenip=0.0.0.0"
-      - "-allowfrom=traefik"
-      - '-allowGET=/v1\..{1,2}/(version|containers/.*|events.*)'
-      - "-allowHEAD=/_ping"
-      - "-shutdowngracetime=5"
-      - "-watchdoginterval=60"
-      - "-watchdoginterval=3600"
-      - "-stoponwatchdog"
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-    networks:
-      - comnet
-
   traefik:
     restart: unless-stopped
     security_opt:
       - no-new-privileges:true
+      - label=type:container_runtime_t
     mem_limit: 2G
     volumes:
-      - ${CURDIR}/.data/traefik/ssl/:/etc/traefik/ssl/
-      - ${CURDIR}/.logs/traefik/:/var/log/traefik/
+      - ${CURDIR}/.data/traefik/ssl/:/etc/traefik/ssl/:z
+      - ${CURDIR}/.logs/traefik/:/var/log/traefik/:z
+      - $XDG_RUNTIME_DIR/podman/podman.sock:/var/run/docker.sock:ro,Z
     environment:
-      - DOCKER_HOST=dockersocket
+      - DOCKER_HOST=unix://$XDG_RUNTIME_DIR/podman/podman.sock
     ports:
       - target: 80
         published: ${TRAEFIK_HOST_HTTP_PORT:-80}
@@ -54,10 +28,7 @@ services:
         protocol: tcp
         mode: host
     networks:
-      - comnet
       - proxy
-    depends_on:
-      - dockersocket
 
   logger:
     restart: unless-stopped
@@ -65,9 +36,9 @@ services:
       - no-new-privileges:true
     mem_limit: 64M
     volumes:
-      - ${CURDIR}/.logs/traefik:/var/log/traefik
+      - ${CURDIR}/.logs/traefik:/var/log/traefik:z
     networks:
-      - comnet
+      - proxy
     depends_on:
       - traefik
 
@@ -75,7 +46,6 @@ services:
   #   image: traefik/whoami:latest
   #   container_name: whoami
   #   networks:
-  #     - comnet
   #     - proxy
   #   depends_on:
   #     - traefik
@@ -92,7 +62,6 @@ services:
   #   security_opt:
   #     - no-new-privileges:true
   #   networks:
-  #     - comnet
   #     - proxy
   #   volumes:
   #     - /etc/localtime:/etc/localtime:ro

@@ -1,0 +1,100 @@
+---
+networks:
+  proxy:
+    name: proxy
+    driver: bridge
+    external: true
+
+services:
+  dockersocket:
+    read_only: true
+    restart: unless-stopped
+    user: 65530:${DOCKER_GROUP_ID?}
+    mem_limit: 128M
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    command:
+      - "-loglevel=debug"
+      - "-listenip=0.0.0.0"
+      - "-allowfrom=traefik"
+      - '-allowGET=/v1\..{1,2}/(version|containers/.*|events.*)'
+      - "-allowHEAD=/_ping"
+      - "-shutdowngracetime=5"
+      - "-watchdoginterval=60"
+      - "-watchdoginterval=3600"
+      - "-stoponwatchdog"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - proxy
+
+  traefik:
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    mem_limit: 2G
+    volumes:
+      - ${CURDIR}/.data/traefik/ssl/:/etc/traefik/ssl/
+      - ${CURDIR}/.logs/traefik/:/var/log/traefik/
+    environment:
+      - DOCKER_HOST=dockersocket
+    ports:
+      - target: 80
+        published: ${TRAEFIK_HOST_HTTP_PORT:-80}
+        protocol: tcp
+        mode: host
+      - target: 443
+        published: ${TRAEFIK_HOST_HTTPS_PORT:-443}
+        protocol: tcp
+        mode: host
+    networks:
+      - proxy
+    depends_on:
+      - dockersocket
+
+  logger:
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    mem_limit: 64M
+    volumes:
+      - ${CURDIR}/.logs/traefik:/var/log/traefik
+    networks:
+      - proxy
+    depends_on:
+      - traefik
+
+  # whoami:
+  #   image: traefik/whoami:latest
+  #   container_name: whoami
+  #   networks:
+  #     - proxy
+  #   depends_on:
+  #     - traefik
+  #   labels:
+  #     - traefik.enable=true
+  #     - traefik.http.routers.whoami.entrypoints=https
+  #     - traefik.http.routers.whoami.rule=Host(`jogjascript.com`)||Host(`www.jogjascript.com`)
+  #     # Add redirect middlewares for http and https
+  #     - traefik.http.routers.whoami.middlewares=redirect-http-www@file,redirect-https-www@file
+
+  # portainer:
+  #   image: portainer/portainer-ce:latest
+  #   restart: unless-stopped
+  #   security_opt:
+  #     - no-new-privileges:true
+  #   networks:
+  #     - proxy
+  #   volumes:
+  #     - /etc/localtime:/etc/localtime:ro
+  #     - ${CURDIR}/.data/portainer:/data
+  #   labels:
+  #     - traefik.enable=true
+  #     - traefik.http.routers.portainer.entrypoints=http
+  #     - traefik.http.routers.portainer.rule=Host(`portainer.${TRAEFIK_DOMAIN_NAME}`)
+  #     - traefik.http.services.portainer.loadbalancer.server.port=9000
+  #   depends_on:
+  #     - dockersocket
+  #     - traefik

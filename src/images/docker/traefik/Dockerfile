@@ -1,5 +1,9 @@
 ARG TRAEFIK_VERSION=3.2
-FROM traefik:${TRAEFIK_VERSION} AS base
+FROM docker.io/library/traefik:${TRAEFIK_VERSION} AS base
+
+# Container engine
+ARG CONTAINER_ENGINE
+ENV CONTAINER_ENGINE=${CONTAINER_ENGINE}
 
 # Timezone
 ARG TIMEZONE
@@ -113,11 +117,11 @@ COPY --from=mikefarah/yq:4 "/usr/bin/yq" "/usr/local/bin/yq"
 RUN ln -snf /usr/share/zoneinfo/$TIMEZONE /etc/localtime && echo $TIMEZONE > /etc/timezone
 
 # Copy Traefik configuration
-COPY ./images/traefik/config/traefik.yml /etc/traefik/traefik.yml
-COPY ./images/traefik/config/dynamic/ /etc/traefik/dynamic/
+COPY ./images/$CONTAINER_ENGINE/traefik/config/traefik.yml /etc/traefik/traefik.yml
+COPY ./images/$CONTAINER_ENGINE/traefik/config/dynamic/ /etc/traefik/dynamic/
 
 # Copy entrypoint
-COPY ./images/traefik/entrypoint.sh /entrypoint.sh
+COPY ./images/$CONTAINER_ENGINE/traefik/entrypoint.sh /entrypoint.sh
 
 # Expose ports
 EXPOSE 80 443
