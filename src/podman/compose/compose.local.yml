@@ -9,7 +9,7 @@ services:
   traefik:
     restart: unless-stopped
     security_opt:
-      - no-new-privileges:true
+      # - no-new-privileges:true
       - label=type:container_runtime_t
     mem_limit: 2G
     volumes:
@@ -67,10 +67,9 @@ services:
   #     - /etc/localtime:/etc/localtime:ro
   #     - ${CURDIR}/.data/portainer:/data
   #   labels:
-  #     - traefik.enable=true
   #     - traefik.http.routers.portainer.entrypoints=http
   #     - traefik.http.routers.portainer.rule=Host(`portainer.${TRAEFIK_DOMAIN_NAME}`)
-  #     - traefik.http.services.portainer.loadbalancer.server.port=9000
+  #     - traefik.http.services.portainer.loadbalancer.serve mr.port=9000
   #   depends_on:
   #     - dockersocket
   #     - traefik
