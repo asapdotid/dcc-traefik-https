@@ -117,11 +117,11 @@ COPY --from=mikefarah/yq:4 "/usr/bin/yq" "/usr/local/bin/yq"
 RUN ln -snf /usr/share/zoneinfo/$TIMEZONE /etc/localtime && echo $TIMEZONE > /etc/timezone
 
 # Copy Traefik configuration
-COPY ./images/$CONTAINER_ENGINE/traefik/config/traefik.yml /etc/traefik/traefik.yml
-COPY ./images/$CONTAINER_ENGINE/traefik/config/dynamic/ /etc/traefik/dynamic/
+COPY ./$CONTAINER_ENGINE/images/traefik/config/traefik.yml /etc/traefik/traefik.yml
+COPY ./$CONTAINER_ENGINE/images/traefik/config/dynamic/ /etc/traefik/dynamic/
 
 # Copy entrypoint
-COPY ./images/$CONTAINER_ENGINE/traefik/entrypoint.sh /entrypoint.sh
+COPY ./$CONTAINER_ENGINE/images/traefik/entrypoint.sh /entrypoint.sh
 
 # Expose ports
 EXPOSE 80 443

@@ -1,10 +1,19 @@
 ---
 services:
+  dockersocket:
+    image: ${DOCKER_REGISTRY?}/${DOCKER_NAMESPACE?}/docker-socket-local:${TAG?}
+    build:
+      context: ${CURDIR}/src/
+      dockerfile: ./${CONTAINER_ENGINE?}/images//docker-socket/Dockerfile
+      target: local
+      args:
+        - DOCKER_SOCKET_VERSION=${DOCKER_SOCKET_VERSION?}
+
   traefik:
     image: ${DOCKER_REGISTRY?}/${DOCKER_NAMESPACE?}/traefik-local:${TAG?}
     build:
       context: ${CURDIR}/src/
-      dockerfile: ./images/${CONTAINER_ENGINE?}/traefik/Dockerfile
+      dockerfile: ./${CONTAINER_ENGINE?}/images//traefik/Dockerfile
       target: local
       args:
         - CONTAINER_ENGINE=${CONTAINER_ENGINE?}
@@ -49,7 +58,7 @@ services:
     image: ${DOCKER_REGISTRY?}/${DOCKER_NAMESPACE?}/logger-local:${TAG?}
     build:
       context: ${CURDIR}/src/
-      dockerfile: ./images/${CONTAINER_ENGINE?}/logger/Dockerfile
+      dockerfile: ./${CONTAINER_ENGINE?}/images//logger/Dockerfile
       target: local
       args:
         - ALPINE_VERSION=${ALPINE_VERSION?}
