@@ -1,0 +1,7 @@
+# http:
+#   routers:
+#     http:
+#       entryPoints:
+#         - https
+#       rule: HostRegexp(`{any:.+}`)
+#       service: noop@file

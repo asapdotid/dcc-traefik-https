@@ -1,0 +1,91 @@
+http:
+  middlewares:
+    # A basic authentification middleware, to protect the Traefik dashboard to anyone except myself
+    # Use with traefik.http.routers.myRouter.middlewares: "traefikBasicAuth@file"
+    traefikBasicAuth:
+      basicAuth:
+        removeHeader: true
+        users:
+          - "admin:$apr1$W3jHMbEG$TCzyOICAWv/6kkraCHKYC0"
+
+    # Recommended default middleware for most of the services
+    # Use with traefik.http.routers.myRouter.middlewares: "default@file"
+    # Equivalent of traefik.http.routers.myRouter.middlewares: "securityHeaders@file,gzip@file"
+    default:
+      chain:
+        middlewares:
+          - midRateLimit
+          - midSecurityHeaders
+          - midCorsHeaders
+          - midCacheHeaders
+          - midWellknown
+          - midGzip
+
+    midRateLimit:
+      rateLimit:
+        average: 100
+        burst: 50
+
+    midSecurityHeaders:
+      headers:
+        customResponseHeaders:
+          X-Robots-Tag: none,noarchive,nosnippet,notranslate,noimageindex
+          server: ""
+          X-Forwarded-Proto: https
+        customRequestHeaders:
+          X-Forwarded-Proto: https
+        sslProxyHeaders:
+          X-Forwarded-Proto: https
+        hostsProxyHeaders:
+          - X-Forwarded-Host
+        referrerPolicy: origin-when-cross-origin
+        contentTypeNosniff: true
+        browserXssFilter: true
+        forceSTSHeader: true
+        stsIncludeSubdomains: true
+        stsSeconds: 63072000
+        stsPreload: true
+        frameDeny: true
+        contentSecurityPolicy: __TRAEFIK_MID_SEC_CONTENT_SECURITY_POLICY
+        permissionsPolicy: __TRAEFIK_MID_SEC_PERMISSION_POLICY
+
+    midCorsHeaders:
+      headers:
+        accessControlAllowCredentials: true
+        accessControlAllowHeaders:
+          - "*"
+        accessControlAllowMethods:
+          - OPTION
+          - GET
+          - POST
+          - PUT
+          - DELETE
+          - PATCH
+        accessControlAllowOriginList: origin-list-or-null
+        accessControlMaxAge: 100
+        addVaryHeader: true
+
+    midCacheHeaders:
+      headers:
+        customResponseHeaders:
+          Cache-Control: "no-cache, max-age=0"
+
+    midWellknown:
+      replacepathregex:
+        regex: "^(/.well-known.*)"
+        replacement: '/index.php$${1}"'
+
+    midGzip:
+      compress: {}
+
+    redirect-http-www:
+      redirectRegex:
+        regex: "^http?://www\\.(.+)"
+        replacement: "http://${1}"
+        permanent: true
+
+    redirect-https-www:
+      redirectRegex:
+        regex: "^https?://www\\.(.+)"
+        replacement: "https://${1}"
+        permanent: true

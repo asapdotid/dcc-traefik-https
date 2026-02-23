@@ -1,6 +1,10 @@
 ARG ALPINE_VERSION=3.21
 FROM docker.io/library/alpine:${ALPINE_VERSION} AS base
 
+# Container engine
+ARG CONTAINER_ENGINE
+ENV CONTAINER_ENGINE=${CONTAINER_ENGINE}
+
 RUN apk add --no-cache --upgrade \
     apk-cron \
     logrotate \
@@ -13,9 +17,9 @@ RUN apk add --no-cache --upgrade \
 ARG TIMEZONE
 RUN ln -snf /usr/share/zoneinfo/$TIMEZONE /etc/localtime && echo $TIMEZONE > /etc/timezone
 
-COPY ./images/logger/logrotate.d/* /etc/logrotate.d/
+COPY ./$CONTAINER_ENGINE/images/logger/logrotate.d/* /etc/logrotate.d/
 
-COPY ./images/logger/logrotate.conf /etc/logrotate.conf
+COPY ./$CONTAINER_ENGINE/images/logger/logrotate.conf /etc/logrotate.conf
 
 ARG PATH_TO_LOG_DIR=/var/log/cron
 ARG PATH_TO_CRON_OUTPUT_LOG=$PATH_TO_LOG_DIR/cron-output.log

@@ -2,51 +2,84 @@
     <img src="docs/assets/img/traefik-ssl.png" width="600" />
 </p>
 
-# Docker Compose Traefik - Proxy Container Service (Cloudflare)
+# Docker/Podman Compose Traefik - Proxy Container Service (Cloudflare)
 
 This guide shows you how to deploy your containers behind Traefik reverse-proxy. It will obtain and refresh `HTTPS` certificates automatically and it comes with password-protected Traefik dashboard.
 
-## Docker container
+## Docker Engine
 
-### Main container
+### Services Container
 
--   Docker Socket Proxy 1.10.1
--   Traefik 2.11.x, 3.1.x, 3.2.x, 3.3.x, 3.4.x & 3.5.x
--   Logger Alpine Linux 3.20 or 3.21
+- Docker Socket Proxy 1.11.2
+- Traefik 2.11.x, 3.1.x, 3.2.x, 3.3.x, 3.4.x & 3.5.x
+- Logger Alpine Linux 3.20 or 3.21
 
-> **Traefik** `3.6.x` on going testing config with **Docker** version `28.x.x`
+> **Traefik** `3.5.x` on going testing config with **Docker** version `28.x.x`
 
-### Docker container:
+### References
 
--   Docker Socket Proxy (security) - [Document](https://hub.docker.com/r/wollomatic/socket-proxy)
--   Traefik [Document](https://hub.docker.com/_/traefik)
--   Logger (logrotate & cron) `Custom of Alpine`
--   Portainer (Optional) [Document](https://www.portainer.io/)
+- Docker Socket Proxy (security) - [Document](https://hub.docker.com/r/wollomatic/socket-proxy)
+- Traefik [Document](https://hub.docker.com/_/traefik)
+- Logger (logrotate & cron) `Custom of Alpine`
+
+## Podman Engine
+
+### Services Container
+
+- Traefik 2.11.x, 3.1.x, 3.2.x, 3.3.x, 3.4.x & 3.5.x
+- Logger Alpine Linux 3.20 or 3.21
+
+> **Traefik** `3.5.x` on going testing config with **\*Podman** version `5.7.1`
+
+### References
+
+- Traefik [Document](https://hub.docker.com/_/traefik)
+- Logger (logrotate & cron) `Custom of Alpine`
+
+### Admin Actions (root privilege `sudo`)
+
+For linux have `selinux`
+
+##### Enabling unprivileged users to bind into port 80
+
+```sh
+echo 'net.ipv4.ip_unprivileged_port_start=80' >> /etc/sysctl.conf
+sysctl -p
+```
+
+#### Allow HTTP and HTTPS connections
+
+```sh
+firewall-cmd --add-service={http,https} --permanent
+firewall-cmd --reload
+```
 
 ### Optional (development)
 
--   Whoami (prints OS information - local development) [Document](https://github.com/traefik/whoami)
--   Portainer (Optional) [Document](https://www.portainer.io/)
+- Whoami (prints OS information - local development) [Document](https://github.com/traefik/whoami)
+- Portainer (Optional) [Document](https://www.portainer.io/)
 
 ### Step 1: Make Sure You Have Required Dependencies
 
--   Git
--   Docker
--   Docker Compose
+- Git
+- Docker
+- Docker Compose
+- Podman
+- Podman Compose/Docker Compose
 
-#### Example Installation on Debian-based Systems:
+#### Docker Installation on The Systems:
 
-Official documentation for install Docker with new Docker Compose V2 [doc](https://docs.docker.com/engine/install/), and you can install too Docker Compose V1. Follow official documentation.
+Official documentation for install `Docker` [doc](https://docs.docker.com/engine/install/)
 
-```bash
-sudo apt-get install git docker-ce docker-ce-cli containerd.io docker-compose-plugin
-```
+#### Podman Installation on The Systems:
+
+Official documentation for install `Podman` [doc](https://podman.io/docs/installation)
 
 ### Step 2: Clone the Repository
 
 ```bash
-git clone https://github.com/asapdotid/dcc-traefik-cf-https.git
-cd dcc-traefik-cf-https
+git clone https://github.com/asapdotid/dcc-traefik-https.git
+cd dcc-traefik-https
 ```
 
 Make command help:
@@ -65,13 +98,16 @@ Modified file in `.make/.env` for build image
 
 ```ini
 ...
+# Container engine: docker or podman
+CONTAINER_ENGINE=podman
+
 # Project variables
 DOCKER_REGISTRY=docker.io
 DOCKER_NAMESPACE=asapdotid
 DOCKER_PROJECT_NAME=tf-proxy
 
 # Docker image version
-DOCKER_SOCKET_VERSION=1.10.1
+DOCKER_SOCKET_VERSION=1.11.2
 TRAEFIK_VERSION=3.5
 ALPINE_VERSION=3.21
 
@@ -79,7 +115,7 @@ ALPINE_VERSION=3.21
 TIMEZONE=Asia/Jakarta
 ```
 
-### Step 3: Make Docker Compose Initial Environment Variables
+### Step 3: Make Compose Initial Environment Variables
 
 ```bash
 make env
@@ -162,10 +198,10 @@ make up
 make down
 ```
 
-### Step 6: Additional Docker Service
+### Step 6: Additional Services
 
--   Whoami
--   Portainer
+- Whoami
+- Portainer
 
 Can remove or command.
 
@@ -191,7 +227,7 @@ Read [Traefik Let's Encrypt](https://doc.traefik.io/traefik/https/acme/)
 
 Here is a list of supported providers, on this project:
 
--   Cloudflare
+- Cloudflare
 
 Let's say you have a domain `example.com` and it's DNS records point to your production server. Just repeat the local deployment steps, but don't forget to update `TRAEFIK_DOMAIN_NAME`, `TRAEFIK_ACME_DNS_CHALLENGE_PROVIDER_EMAIL` & `TRAEFIK_ACME_DNS_CHALLENGE_PROVIDER_TOKEN` environment variables. In case of `example.com`, your `src/.env` file should have the following lines:
 
@@ -228,7 +264,7 @@ whoami:
     image: traefik/whoami:latest
     container_name: whoami
     networks:
-        - internal
+        - proxy
     depends_on:
         - traefik
     labels:
@@ -248,7 +284,7 @@ portainer:
     security_opt:
         - no-new-privileges:true
     networks:
-        - internal
+        - proxy
     volumes:
         - /etc/localtime:/etc/localtime:ro
         - ../../.data/portainer:/data
@@ -258,7 +294,6 @@ portainer:
         - traefik.http.routers.portainer.rule=Host(`portainer.${TRAEFIK_DOMAIN_NAME}`)
         - traefik.http.services.portainer.loadbalancer.server.port=9000
     depends_on:
-        - dockersocket
         - traefik
 ```
 

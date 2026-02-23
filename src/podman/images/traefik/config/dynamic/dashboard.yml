@@ -1,0 +1,11 @@
+http:
+  routers:
+    dashboard:
+      entryPoints:
+        - https
+      rule: Host(`monitor.domain_name.com`)
+      service: api@internal
+      tls:
+        certresolver: letsEncrypt
+      middlewares:
+        - traefikBasicAuth@file
