@@ -9,13 +9,12 @@ services:
   traefik:
     restart: unless-stopped
     security_opt:
-      # - no-new-privileges:true
       - label=type:container_runtime_t
     mem_limit: 2G
     volumes:
-      - ${CURDIR}/.data/traefik/ssl/:/etc/traefik/ssl/:z
+      - ${CURDIR}/.data/traefik/ssl/:/etc/traefik/ssl/:Z
       - ${CURDIR}/.logs/traefik/:/var/log/traefik/:z
-      - $XDG_RUNTIME_DIR/podman/podman.sock:/var/run/docker.sock:ro,Z
+      - $XDG_RUNTIME_DIR/podman/podman.sock:/var/run/docker.sock:Z
     environment:
       - DOCKER_HOST=unix://$XDG_RUNTIME_DIR/podman/podman.sock
     ports:
